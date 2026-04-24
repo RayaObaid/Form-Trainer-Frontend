@@ -138,71 +138,73 @@ window.App = (() => {
   }
 
   function onPoseResults(results) {
-    if (!analysisActive) return;
+  if (!analysisActive) return;
 
-    const canvas = document.getElementById("poseCanvas");
-    const ctx    = canvas.getContext("2d");
+  const canvas = document.getElementById("poseCanvas");
+  const ctx    = canvas.getContext("2d");
 
-    if (results.image) {
-      canvas.width  = results.image.width  || canvas.width;
-      canvas.height = results.image.height || canvas.height;
-    }
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    if (!results.poseLandmarks) {
-      handleNoPose();
-      return;
-    }
-
-    if (!poseDetected) {
-      poseDetected = true;
-      clearTimeout(noPoseTimer);
-      noPoseTimer = null;
-      UI.showNoPose(false);
-    }
-
-    const lms = results.poseLandmarks;
-    const midSh  = { y: (lms[11].y + lms[12].y) / 2 };
-    const midAnk = { y: (lms[27].y + lms[28].y) / 2 };
-    const heightRatio = Math.abs(midAnk.y - midSh.y);
-    const exercisesNeedingLowPosition = ["plank", "mountain-climber", "push-up", "burpee", "glute-bridge", "bicycle-crunch"];
-    
-    if (exercisesNeedingLowPosition.includes(selectedExercise.id) && heightRatio > 0.35) {
-      UI.showNoPose(false);
-      document.getElementById("liveCueText").textContent = "Get into position on the floor";
-      document.getElementById("liveCueText").classList.add("visible");
-      return;
-    }
-
-    drawConnectors(ctx, lms, POSE_CONNECTIONS, {
-      color: "rgba(232,255,71,0.45)",
-      lineWidth: 2.5,
-    });
-    drawLandmarks(ctx, lms, {
-      color:      "rgba(255,255,255,0.85)",
-      fillColor: "rgba(232,255,71,0.75)",
-      lineWidth: 1,
-      radius:    4,
-    });
-
-    const result = PoseAnalyzer.analyze(selectedExercise.analyzerKey, lms);
-
-    UI.updateScoreCircle(result.score);
-    UI.updateMetrics(result.metrics);
-
-    if (result.repSignal) {
-      repCount++;
-      UI.updateRepCircle(repCount);
-      VoiceCoach.announceRep(repCount);
-    }
-
-    const now = Date.now();
-    if (now - lastFeedbackTime >= FEEDBACK_INTERVAL) {
-      lastFeedbackTime = now;
-      fetchAndDeliverFeedback(result);
-    }
+  if (results.image) {
+    canvas.width  = results.image.width  || canvas.width;
+    canvas.height = results.image.height || canvas.height;
   }
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (!results.poseLandmarks) {
+    handleNoPose();
+    return;
+  }
+
+  if (!poseDetected) {
+    poseDetected = true;
+    clearTimeout(noPoseTimer);
+    noPoseTimer = null;
+    UI.showNoPose(false);
+  }
+
+  const lms = results.poseLandmarks;
+
+  // Draw skeleton FIRST — always, regardless of position check
+  drawConnectors(ctx, lms, POSE_CONNECTIONS, {
+    color: "rgba(232,255,71,0.45)",
+    lineWidth: 2.5,
+  });
+  drawLandmarks(ctx, lms, {
+    color:     "rgba(255,255,255,0.85)",
+    fillColor: "rgba(232,255,71,0.75)",
+    lineWidth: 1,
+    radius:    4,
+  });
+
+  // Position check — only for floor exercises
+  const midSh  = { y: (lms[11].y + lms[12].y) / 2 };
+  const midAnk = { y: (lms[27].y + lms[28].y) / 2 };
+  const heightRatio = Math.abs(midAnk.y - midSh.y);
+  const floorExercises = ["plank", "mountain-climber", "push-up", "burpee", "glute-bridge", "bicycle-crunch"];
+
+  if (floorExercises.includes(selectedExercise.id) && heightRatio > 0.35) {
+    document.getElementById("liveCueText").textContent = "Get into position on the floor";
+    document.getElementById("liveCueText").classList.add("visible");
+    return;
+  }
+
+  const result = PoseAnalyzer.analyze(selectedExercise.analyzerKey, lms);
+
+  UI.updateScoreCircle(result.score);
+  UI.updateMetrics(result.metrics);
+
+  if (result.repSignal) {
+    repCount++;
+    UI.updateRepCircle(repCount);
+    VoiceCoach.announceRep(repCount);
+  }
+
+  const now = Date.now();
+  if (now - lastFeedbackTime >= FEEDBACK_INTERVAL) {
+    lastFeedbackTime = now;
+    fetchAndDeliverFeedback(result);
+  }
+}
 
   function handleNoPose() {
     if (!noPoseTimer) {
