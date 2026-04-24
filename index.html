@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FORM — AI Personal Trainer</title>
+  <meta name="description" content="Real-time AI-powered personal trainer with voice coaching and pose analysis." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/landing.css" />
+  <link rel="stylesheet" href="css/trainer.css" />
+</head>
+<body>
+
+
+  <div id="screen-landing" class="screen active">
+    <div class="landing-glow"></div>
+    <div class="landing-glow2"></div>
+
+    <div class="logo-area">
+      <div class="logo-badge">AI Personal Trainer</div>
+      <div class="logo-title">FORM</div>
+      <div class="logo-subtitle">Real-time pose analysis · Voice coaching · No excuses</div>
+    </div>
+
+    <div class="filter-bar">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="easy">Beginner</button>
+      <button class="filter-btn" data-filter="medium">Intermediate</button>
+      <button class="filter-btn" data-filter="hard">Advanced</button>
+    </div>
+
+    <div class="exercise-grid" id="exerciseGrid"></div>
+
+    <div class="start-area">
+      <button class="start-btn" id="startBtn" disabled onclick="window.App.launchTrainer()">
+        <span class="start-btn-icon">▶</span>
+        START SESSION
+      </button>
+      <div class="start-hint" id="startHint">← Select an exercise to begin</div>
+    </div>
+  </div>
+
+
+  <div id="screen-trainer" class="screen">
+
+    <header class="trainer-header">
+      <div class="trainer-logo">FORM</div>
+
+      <div class="ex-label">
+        <span class="ex-label-icon" id="headerIcon"></span>
+        <span class="ex-label-name" id="headerName"></span>
+      </div>
+
+      <div class="header-right">
+        <button class="voice-toggle" id="voiceToggle" onclick="window.App.toggleVoice()" title="Toggle voice coaching">
+          <span id="voiceIcon">🔊</span>
+          <span id="voiceLabel">VOICE ON</span>
+        </button>
+        <button class="icon-btn" onclick="window.App.goBack()">← Exit</button>
+      </div>
+    </header>
+
+    <div class="trainer-body">
+
+      <div class="video-container">
+        <video id="videoElement" autoplay muted playsinline></video>
+        <canvas id="poseCanvas"></canvas>
+
+        <div class="video-overlay-top">
+          <div class="status-pill" id="statusPill">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">INITIALIZING</span>
+          </div>
+
+          <div class="score-cluster">
+            <div class="score-circle" id="scoreCircle">
+              <div class="score-val" id="scoreVal">—</div>
+              <div class="score-lbl">FORM</div>
+            </div>
+            <div class="rep-circle" id="repCircle">
+              <div class="score-val" id="repVal">0</div>
+              <div class="score-lbl">REPS</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="live-cue-banner" id="liveCueBanner">
+          <div class="live-cue-text" id="liveCueText"></div>
+        </div>
+
+        <div class="no-pose-overlay" id="noPoseOverlay">
+          <div class="no-pose-icon">🏃</div>
+          <div class="no-pose-title">STEP INTO FRAME</div>
+          <div class="no-pose-sub">Make sure your full body is visible</div>
+        </div>
+
+        <div class="camera-prompt" id="cameraPrompt">
+          <div class="camera-prompt-inner">
+            <div class="camera-icon">📷</div>
+            <div class="camera-prompt-title">Ready to train?</div>
+            <div class="camera-prompt-sub">Allow camera access to begin pose analysis</div>
+            <button class="start-camera-btn" onclick="window.App.startCamera()">
+              <span>🎯</span> Begin Analysis
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="feedback-panel">
+
+        <div class="panel-section" id="timerSection">
+          <div class="panel-label">Session</div>
+          <div class="timer-row">
+            <div class="timer-val" id="timerDisplay">00:00</div>
+            <div class="timer-controls">
+              <button class="timer-btn" id="timerToggle" onclick="window.App.toggleTimer()" title="Start/Pause">▶</button>
+              <button class="timer-btn" onclick="window.App.resetTimer()" title="Reset">↺</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-label">AI Coach Says</div>
+          <div class="cue-box" id="cueBox">
+            <div class="cue-status-row">
+              <div class="cue-icon" id="cueIcon">⏳</div>
+              <div class="cue-level" id="cueLevel">Waiting</div>
+            </div>
+            <div class="cue-text" id="cueText">
+              Get into position in front of the camera.
+            </div>
+            <div class="cue-score-row">
+              <span class="cue-score-lbl">Score</span>
+              <div class="cue-score-bar">
+                <div class="cue-score-fill" id="cueScoreFill"></div>
+              </div>
+              <span class="cue-score-num" id="cueScoreNum">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-label">Body Analysis</div>
+          <div class="metrics-grid" id="metricsGrid">
+          </div>
+        </div>
+
+        <div class="panel-section log-section">
+          <div class="panel-label">Coaching Log</div>
+          <div class="log-list" id="logList"></div>
+        </div>
+
+        <div class="panel-section guide-section">
+          <div class="panel-label">Exercise Guide</div>
+          <div class="guide-content" id="guideContent"></div>
+        </div>
+
+      </aside>
+    </div>
+  </div>
+
+  <script src="js/exercises.js"></script>
+  <script src="js/pose-analyzer.js"></script>
+  <script src="js/voice.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

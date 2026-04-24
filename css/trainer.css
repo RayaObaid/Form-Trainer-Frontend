@@ -1,0 +1,546 @@
+/* ═══════════════════════════════════════════════════════════
+   FORM TRAINER — trainer.css
+   Live trainer screen styles
+════════════════════════════════════════════════════════════ */
+
+#screen-trainer {
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ─── Header ──────────────────────────────────────────────── */
+.trainer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(6,6,8,0.92);
+  backdrop-filter: blur(14px);
+  z-index: 20;
+  flex-shrink: 0;
+  gap: 16px;
+}
+
+.trainer-logo {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  flex-shrink: 0;
+}
+
+.ex-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ex-label-icon { font-size: 20px; }
+.ex-label-name {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 0.06em;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Voice Toggle Button */
+.voice-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--bg3);
+  border: 1px solid rgba(232,255,71,0.35);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  color: var(--accent);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  transition: all var(--transition);
+}
+.voice-toggle:hover { background: var(--accent-dim); }
+.voice-toggle.muted {
+  border-color: var(--border);
+  color: var(--muted);
+}
+
+/* ─── Body Layout ─────────────────────────────────────────── */
+.trainer-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ─── Video Area ──────────────────────────────────────────── */
+.video-container {
+  position: relative;
+  flex: 1;
+  background: #000;
+  overflow: hidden;
+}
+
+#videoElement {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+  display: block;
+}
+
+#poseCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: scaleX(-1);
+  pointer-events: none;
+}
+
+/* ─── Overlay — Top Bar ───────────────────────────────────── */
+.video-overlay-top {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  padding: 18px 20px;
+  background: linear-gradient(to bottom, rgba(6,6,8,0.75), transparent);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  z-index: 5;
+}
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(6,6,8,0.65);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 6px 14px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  transition: all 0.4s;
+}
+.status-pill.live { border-color: rgba(45,255,158,0.4); color: var(--good); }
+
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.status-pill.live .status-dot {
+  background: var(--good);
+  animation: blink 1.4s infinite;
+  box-shadow: 0 0 6px var(--good);
+}
+
+/* Score Circles */
+.score-cluster { display: flex; gap: 10px; }
+
+.score-circle, .rep-circle {
+  width: 68px; height: 68px;
+  border-radius: 50%;
+  background: rgba(6,6,8,0.72);
+  backdrop-filter: blur(8px);
+  border: 2px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.4s;
+}
+.score-circle.good { border-color: var(--good); }
+.score-circle.warn { border-color: var(--warn); }
+.score-circle.bad  { border-color: var(--bad); }
+
+.score-val {
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 1;
+  transition: color 0.4s;
+}
+.score-lbl {
+  font-size: 8px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  margin-top: 2px;
+}
+
+/* ─── Live Cue Banner ────────────────────────────────────── */
+.live-cue-banner {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 0 24px 28px;
+  background: linear-gradient(to top, rgba(6,6,8,0.9) 0%, transparent 100%);
+  z-index: 5;
+  display: flex;
+  align-items: flex-end;
+  min-height: 110px;
+  pointer-events: none;
+}
+
+.live-cue-text {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 3.5vw, 34px);
+  letter-spacing: 0.04em;
+  color: #fff;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.7);
+  line-height: 1.2;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  max-width: 80%;
+}
+.live-cue-text.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.live-cue-text.good-cue { color: var(--good); }
+.live-cue-text.warn-cue { color: var(--warn); }
+.live-cue-text.bad-cue  { color: var(--bad); }
+
+/* ─── No Pose Overlay ────────────────────────────────────── */
+.no-pose-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(6,6,8,0.72);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 8;
+  backdrop-filter: blur(6px);
+  gap: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+.no-pose-overlay.visible { opacity: 1; pointer-events: all; }
+
+.no-pose-icon  { font-size: 52px; }
+.no-pose-title {
+  font-family: var(--font-display);
+  font-size: 32px;
+  letter-spacing: 0.06em;
+  color: rgba(240,240,240,0.5);
+}
+.no-pose-sub { font-size: 14px; color: var(--muted); font-weight: 300; }
+
+/* ─── Camera Prompt ──────────────────────────────────────── */
+.camera-prompt {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: opacity 0.5s;
+}
+.camera-prompt.hidden { opacity: 0; pointer-events: none; }
+
+.camera-prompt-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  text-align: center;
+}
+.camera-icon { font-size: 60px; }
+.camera-prompt-title {
+  font-family: var(--font-display);
+  font-size: 34px;
+  letter-spacing: 0.05em;
+}
+.camera-prompt-sub { font-size: 15px; color: var(--muted); font-weight: 300; }
+
+.start-camera-btn {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: var(--radius);
+  padding: 16px 36px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all var(--transition);
+}
+.start-camera-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 28px rgba(232,255,71,0.3);
+}
+
+/* ─── Feedback Panel ──────────────────────────────────────── */
+.feedback-panel {
+  width: 340px;
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.panel-section {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* ─── Timer ───────────────────────────────────────────────── */
+.timer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.timer-val {
+  font-family: var(--font-display);
+  font-size: 48px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+.timer-controls { display: flex; gap: 8px; }
+.timer-btn {
+  width: 36px; height: 36px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+}
+.timer-btn:hover { border-color: rgba(232,255,71,0.4); color: var(--accent); }
+
+/* ─── Cue Box ─────────────────────────────────────────────── */
+.cue-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  transition: border-color 0.4s;
+}
+.cue-box.good { border-color: rgba(45,255,158,0.4); }
+.cue-box.warn { border-color: rgba(255,184,48,0.4); }
+.cue-box.bad  { border-color: rgba(255,71,87,0.4); }
+
+.cue-status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.cue-icon {
+  width: 30px; height: 30px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+  background: var(--bg3);
+}
+.cue-icon.good { background: rgba(45,255,158,0.15); }
+.cue-icon.warn { background: rgba(255,184,48,0.15); }
+.cue-icon.bad  { background: rgba(255,71,87,0.15); }
+
+.cue-level {
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+.cue-level.good { color: var(--good); }
+.cue-level.warn { color: var(--warn); }
+.cue-level.bad  { color: var(--bad); }
+
+.cue-text {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: rgba(240,240,240,0.8);
+  font-weight: 300;
+  margin-bottom: 14px;
+}
+
+/* Score bar inside cue box */
+.cue-score-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cue-score-lbl {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+.cue-score-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.cue-score-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--good);
+  transition: width 0.5s ease, background 0.3s;
+  width: 0%;
+}
+.cue-score-fill.warn { background: var(--warn); }
+.cue-score-fill.bad  { background: var(--bad); }
+.cue-score-num {
+  font-family: var(--font-display);
+  font-size: 16px;
+  min-width: 40px;
+  text-align: right;
+  color: var(--good);
+  transition: color 0.3s;
+}
+.cue-score-num.warn { color: var(--warn); }
+.cue-score-num.bad  { color: var(--bad); }
+
+/* ─── Metrics Grid ────────────────────────────────────────── */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.metric-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  transition: border-color 0.3s;
+}
+.metric-item.good { border-color: rgba(45,255,158,0.35); }
+.metric-item.warn { border-color: rgba(255,184,48,0.35); }
+.metric-item.bad  { border-color: rgba(255,71,87,0.35); }
+
+.metric-name {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.metric-val {
+  font-family: var(--font-display);
+  font-size: 20px;
+  line-height: 1;
+  color: #fff;
+}
+.metric-val.good { color: var(--good); }
+.metric-val.warn { color: var(--warn); }
+.metric-val.bad  { color: var(--bad); }
+
+.metric-bar {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  margin-top: 7px;
+  overflow: hidden;
+}
+.metric-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--good);
+  transition: width 0.45s ease, background 0.3s;
+  width: 0%;
+}
+.metric-bar-fill.warn { background: var(--warn); }
+.metric-bar-fill.bad  { background: var(--bad); }
+
+/* ─── Coaching Log ────────────────────────────────────────── */
+.log-section { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.log-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 200px;
+}
+
+.log-entry {
+  display: flex;
+  gap: 10px;
+  animation: fadeIn 0.35s ease both;
+}
+.log-time {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  padding-top: 3px;
+  flex-shrink: 0;
+}
+.log-bubble {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 7px 7px 7px 2px;
+  padding: 9px 12px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: rgba(240,240,240,0.78);
+  font-weight: 300;
+  flex: 1;
+}
+.log-bubble.good { border-color: rgba(45,255,158,0.25); }
+.log-bubble.warn { border-color: rgba(255,184,48,0.25); }
+
+/* ─── Exercise Guide ──────────────────────────────────────── */
+.guide-section { padding: 18px 20px; }
+.guide-steps { display: flex; flex-direction: column; gap: 10px; }
+.guide-step  { display: flex; gap: 12px; align-items: flex-start; }
+.step-num {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 1px solid rgba(232,255,71,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.step-text {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: rgba(240,240,240,0.65);
+  font-weight: 300;
+}
+
+/* ─── Responsive ─────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .feedback-panel { width: 300px; }
+}
+@media (max-width: 768px) {
+  #screen-trainer { overflow-y: auto; }
+  .trainer-body   { flex-direction: column; height: auto; }
+  .video-container { height: 56vw; min-height: 260px; }
+  .feedback-panel { width: 100%; max-height: none; border-left: none; border-top: 1px solid var(--border); }
+  .trainer-logo   { display: none; }
+  .live-cue-text  { font-size: 18px; }
+}
