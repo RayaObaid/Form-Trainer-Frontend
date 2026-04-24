@@ -137,8 +137,12 @@ window.VoiceCoach = (() => {
   // ─── Controls ─────────────────────────────────────────────────────────────
 
   function enable()  { enabled = true;  }
-  function disable() { enabled = false; window.speechSynthesis.cancel(); queue.length = 0; }
-  function toggle()  { enabled ? disable() : enable(); return enabled; }
+function disable() {
+  enabled = false;
+  window.speechSynthesis.cancel();
+  queue.length = 0;
+  speaking = false;
+}  function toggle()  { enabled ? disable() : enable(); return enabled; }
   function isEnabled() { return enabled; }
   function setCooldown(ms) { cooldownMs = ms; }
 

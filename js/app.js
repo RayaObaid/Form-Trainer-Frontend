@@ -60,13 +60,16 @@ window.App = (() => {
   }
 
   function goBack() {
-    stopSession();
-    UI.showLandingScreen();
-    UI.resetMetrics();
-    UI.clearLog();
-    UI.hideLiveCue();
-    resetTimer();
-  }
+  stopSession();
+  VoiceCoach.disable();              
+  window.speechSynthesis.cancel();    
+  setTimeout(() => VoiceCoach.enable(), 500);
+  UI.showLandingScreen();
+  UI.resetMetrics();
+  UI.clearLog();
+  UI.hideLiveCue();
+  resetTimer();
+}
 
   // ─── MediaPipe Setup ──────────────────────────────────────────────────────
   function initPose() {
@@ -175,7 +178,17 @@ window.App = (() => {
       UI.showNoPose(false);
     }
 
-    const lms = results.poseLandmarks;
+    
+    const midSh  = { y: (lms[11].y + lms[12].y) / 2 };
+const midAnk = { y: (lms[27].y + lms[28].y) / 2 };
+const heightRatio = Math.abs(midAnk.y - midSh.y);
+const exercisesNeedingLowPosition = ["plank", "mountain-climber", "push-up", "burpee", "glute-bridge", "bicycle-crunch"];
+if (exercisesNeedingLowPosition.includes(selectedExercise.id) && heightRatio > 0.35) {
+  UI.showNoPose(false);
+  document.getElementById("liveCueText").textContent = "Get into position on the floor";
+  document.getElementById("liveCueText").classList.add("visible");
+  return;
+}
 
     // Draw skeleton
     drawConnectors(ctx, lms, POSE_CONNECTIONS, {
@@ -226,42 +239,37 @@ window.App = (() => {
 
   // ─── Feedback Pipeline ────────────────────────────────────────────────────
   async function fetchAndDeliverFeedback(analysisResult) {
+  if (!analysisActive) return;
+
+  if (analysisResult.score > 85 && analysisResult.issues.length === 0 && repCount === 0 && timerSeconds < 8) return;
+
+  UI.showThinking();
+
+  const payload = {
+    exercise:       selectedExercise.id,
+    score:          analysisResult.score,
+    metrics:        analysisResult.metrics,
+    issues:         analysisResult.issues,
+    reps:           repCount,
+    sessionSeconds: timerSeconds,
+  };
+
+  try {
+    const response = await TrainerAPI.getFeedback(payload);
     if (!analysisActive) return;
 
-    UI.showThinking();
+    const { cue, level } = response;
+    UI.updateCueBox(cue, analysisResult.score, level);
+    UI.showLiveCue(cue, level);
+    UI.addLogEntry(cue, level);
 
-    const payload = {
-      exercise:       selectedExercise.id,
-      score:          analysisResult.score,
-      metrics:        analysisResult.metrics,
-      issues:         analysisResult.issues,
-      reps:           repCount,
-      sessionSeconds: timerSeconds,
-    };
+    const isUrgent = level === "bad";
+    VoiceCoach.sayCoachingCue(cue, isUrgent);
 
-    try {
-      const response = await TrainerAPI.getFeedback(payload);
-      if (!analysisActive) return; // session may have ended while waiting
-
-      const { cue, level } = response;
-
-      // ── Panel update ──────────────────────────────────────────────────
-      UI.updateCueBox(cue, analysisResult.score, level);
-
-      // ── Live cue on video ─────────────────────────────────────────────
-      UI.showLiveCue(cue, level);
-
-      // ── Coaching log ──────────────────────────────────────────────────
-      UI.addLogEntry(cue, level);
-
-      // ── VOICE — speak the cue aloud ───────────────────────────────────
-      const isUrgent = level === "bad";
-      VoiceCoach.sayCoachingCue(cue, isUrgent);
-
-    } catch (err) {
-      console.error("[App] Feedback error:", err);
-    }
+  } catch (err) {
+    console.error("[App] Feedback error:", err);
   }
+}
 
   // ─── Timer ────────────────────────────────────────────────────────────────
   function startTimer() {
