@@ -81,8 +81,8 @@ const Analyzers = {
     const hipScore   = clamp(100 - Math.abs(hipDev)*2.5);
     const overall    = clamp(elbowScore*0.3 + bodyScore*0.45 + hipScore*0.25);
     const state = getRepState("pushup"); let repSignal = false;
-    if (avgElbow < 105) state.phase = "down";
-    if (state.phase==="down" && avgElbow > 155) { state.phase="up"; state.count++; repSignal=true; }
+    if (avgElbow < 95) state.phase = "down";
+    if (state.phase==="down" && avgElbow > 160) { state.phase="up"; state.count++; repSignal=true; }
     const issues = [];
     if (hipScore < 65) issues.push("cues.hips");
     if (elbowScore < 55 && avgElbow > 130) issues.push("cues.depth");
