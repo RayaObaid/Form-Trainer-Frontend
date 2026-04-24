@@ -73,18 +73,21 @@ window.TrainerAPI = (() => {
   ];
 
   function _localFallback({ score, issues }) {
-    let cue;
+  let cue;
+  const level = score >= 75 ? "good" : score >= 50 ? "warn" : "bad";
 
-    if (score >= 80 || issues.length === 0) {
-      cue = GOOD_CUES[Math.floor(Math.random() * GOOD_CUES.length)];
-    } else {
-      const firstKey = issues[0];
-      cue = CUE_MAP[firstKey] || "Focus on your alignment and keep pushing.";
-    }
-
-    const level = score >= 75 ? "good" : score >= 50 ? "warn" : "bad";
-    return { cue, score, level, fallback: true };
+  if (issues.length > 0) {
+    // Always prioritize actual issues over praise
+    const firstKey = issues[0];
+    cue = CUE_MAP[firstKey] || "Fix your alignment and keep going.";
+  } else if (score >= 80) {
+    cue = GOOD_CUES[Math.floor(Math.random() * GOOD_CUES.length)];
+  } else {
+    cue = "Keep going — focus on staying tight.";
   }
+
+  return { cue, score, level, fallback: true };
+}
 
   return {
     getFeedback,

@@ -176,18 +176,6 @@ window.App = (() => {
     radius:    4,
   });
 
-  // Position check — only for floor exercises
-  const midSh  = { y: (lms[11].y + lms[12].y) / 2 };
-  const midAnk = { y: (lms[27].y + lms[28].y) / 2 };
-  const heightRatio = Math.abs(midAnk.y - midSh.y);
-  const floorExercises = ["plank", "mountain-climber", "push-up", "burpee", "glute-bridge", "bicycle-crunch"];
-
-  if (floorExercises.includes(selectedExercise.id) && heightRatio > 0.18) {
-    document.getElementById("liveCueText").textContent = "Get into position on the floor";
-    document.getElementById("liveCueText").classList.add("visible");
-    return;
-  }
-
   const result = PoseAnalyzer.analyze(selectedExercise.analyzerKey, lms);
 
   UI.updateScoreCircle(result.score);
@@ -221,8 +209,7 @@ window.App = (() => {
   async function fetchAndDeliverFeedback(analysisResult) {
     if (!analysisActive) return;
 
-    if (analysisResult.score > 85 && analysisResult.issues.length === 0 && repCount === 0 && timerSeconds < 8) return;
-
+    if (timerSeconds < 3) return;
     UI.showThinking();
 
     const payload = {
