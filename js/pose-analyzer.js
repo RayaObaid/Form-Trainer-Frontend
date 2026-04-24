@@ -1,17 +1,3 @@
-/**
- * pose-analyzer.js
- * Biomechanical analysis for each exercise.
- *
- * COORDINATE SYSTEM (MediaPipe):
- *   x: 0 = left edge, 1 = right edge
- *   y: 0 = TOP of frame, 1 = BOTTOM  ← arms UP = SMALLER y value
- *   z: depth
- *
- * Each analyzer returns:
- * { score, metrics: {head,spine,hips,core}, issues, isGood, repSignal }
- */
-
-// ─── Helpers ───────────────────────────────────────────────────────────────
 function getAngle(a, b, c) {
   const ab = { x: a.x - b.x, y: a.y - b.y };
   const cb = { x: c.x - b.x, y: c.y - b.y };
@@ -27,7 +13,6 @@ function proximityScore(value, target, tolerance) {
   return clamp(100 - (Math.abs(value - target) / tolerance) * 100);
 }
 
-// ─── Rep State ─────────────────────────────────────────────────────────────
 const _repState = {};
 function getRepState(id) {
   if (!_repState[id]) _repState[id] = { phase: "neutral", count: 0 };
@@ -35,7 +20,6 @@ function getRepState(id) {
 }
 function resetRepState(id) { delete _repState[id]; }
 
-// ─── ANALYZERS ─────────────────────────────────────────────────────────────
 const Analyzers = {
 
   plank(lms) {
@@ -176,8 +160,7 @@ const Analyzers = {
     const midSh=mid(lm(lms,11),lm(lms,12)), midHip=mid(lm(lms,23),lm(lms,24));
     const midKn=mid(lm(lms,25),lm(lms,26));
     const lHip=lm(lms,23), rHip=lm(lms,24);
-    // hips raised = hip.y is smaller (higher on screen) than shoulder.y
-    const hipRaise    = (midSh.y - midHip.y) * 200;
+    const hipRaise     = (midSh.y - midHip.y) * 200;
     const hipSymmetry = clamp(100 - Math.abs(lHip.y - rHip.y)*200);
     const heightScore = hipRaise>15 ? 100 : hipRaise>5 ? clamp(60+hipRaise*2.6) : clamp(50+hipRaise*2);
     const overall     = clamp(heightScore*0.65 + hipSymmetry*0.35);
@@ -203,7 +186,6 @@ const Analyzers = {
     return { score:overall, metrics:{head:78,spine:bodyScore,hips:hipScore,core:bodyScore}, issues, isGood:overall>=68, repSignal:false };
   },
 
-  // KEY FIX: y=0 is TOP of screen → arms UP = wrist y is SMALL (< shoulder y)
   jumpingjack(lms) {
     const lSh=lm(lms,11), rSh=lm(lms,12);
     const lEl=lm(lms,13), rEl=lm(lms,14);
@@ -215,18 +197,15 @@ const Analyzers = {
     const midWr  = mid(lWr,rWr);
     const hipWidth = Math.max(Math.abs(lHip.x - rHip.x), 0.08);
 
-    // wristAboveShoulder: positive = wrists higher than shoulders (arms up)
     const wristAboveShoulder = midSh.y - midWr.y;
     const armSpread = Math.abs(lWr.x - rWr.x);
     const legSpread = Math.abs(lAnk.x - rAnk.x);
 
-    // ARM SCORE: full credit when wrists are clearly above head
     let armScore;
     if (wristAboveShoulder > 0.18)      armScore = clamp(85 + armSpread*30);
     else if (wristAboveShoulder > 0.05) armScore = clamp(60 + (wristAboveShoulder-0.05)*400 + armSpread*20);
     else                                 armScore = clamp(20 + Math.max(0,wristAboveShoulder)*200 + armSpread*15);
 
-    // LEG SCORE
     const normLeg  = legSpread / hipWidth;
     const legScore = normLeg>1.8 ? 100 : normLeg>1.2 ? clamp(60+(normLeg-1.2)*65) : clamp(normLeg*50);
 
@@ -255,13 +234,11 @@ const Analyzers = {
     return { score:overall, metrics:{head:78,spine:bodyScore,hips:hipScore,core:bodyScore}, issues, isGood:overall>=65, repSignal:false };
   },
 
-  // At top of lateral raise: elbows at SAME y-level as shoulders
   lateralraise(lms) {
     const lSh=lm(lms,11), rSh=lm(lms,12);
     const lEl=lm(lms,13), rEl=lm(lms,14);
     const midSh=mid(lSh,rSh), midEl=mid(lEl,rEl);
     const midHip=mid(lm(lms,23),lm(lms,24));
-    // elbowRelToShoulder: 0 = elbows at shoulder height (correct), negative = below
     const elbowRelToShoulder = midSh.y - midEl.y;
     const heightScore = elbowRelToShoulder > -0.02
       ? clamp(85 + elbowRelToShoulder*100)
@@ -275,7 +252,7 @@ const Analyzers = {
     if (state.phase==="down" && elbowRelToShoulder > -0.03) { state.phase="up"; state.count++; repSignal=true; }
     const issues = [];
     if (heightScore < 65) issues.push("cues.height");
-    if (sway > 20)        issues.push("cues.swing");
+    if (sway > 20)         issues.push("cues.swing");
     return { score:overall, metrics:{head:82,spine:swayScore,hips:80,core:swayScore}, issues, isGood:overall>=70, repSignal };
   },
 
@@ -298,7 +275,6 @@ const Analyzers = {
   },
 };
 
-// ─── Public API ─────────────────────────────────────────────────────────────
 window.PoseAnalyzer = {
   analyze(analyzerKey, landmarks) {
     const fn = Analyzers[analyzerKey];

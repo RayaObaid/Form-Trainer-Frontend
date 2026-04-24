@@ -1,11 +1,4 @@
-/**
- * ui.js
- * All DOM updates, rendering, and visual feedback.
- * No business logic here — pure presentation layer.
- */
-
 window.UI = (() => {
-  // ─── Exercise Grid ────────────────────────────────────────────────────────
   function renderExerciseGrid(exercises, onSelect) {
     const grid = document.getElementById("exerciseGrid");
     grid.innerHTML = exercises.map(ex => `
@@ -25,7 +18,6 @@ window.UI = (() => {
       </div>
     `).join("");
 
-    // Keyboard navigation
     grid.querySelectorAll(".ex-card").forEach(card => {
       card.addEventListener("keydown", e => {
         if (e.key === "Enter" || e.key === " ") {
@@ -35,7 +27,6 @@ window.UI = (() => {
       });
     });
 
-    // Filter buttons
     document.querySelectorAll(".filter-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
@@ -67,7 +58,6 @@ window.UI = (() => {
     }
   }
 
-  // ─── Screen Transitions ───────────────────────────────────────────────────
   function showTrainerScreen(exercise) {
     document.getElementById("screen-landing").classList.remove("active");
     document.getElementById("screen-trainer").classList.add("active");
@@ -83,19 +73,16 @@ window.UI = (() => {
     document.getElementById("cameraPrompt").classList.remove("hidden");
   }
 
-  // ─── Camera Prompt ────────────────────────────────────────────────────────
   function hideCameraPrompt() {
     document.getElementById("cameraPrompt").classList.add("hidden");
   }
 
-  // ─── Status Pill ─────────────────────────────────────────────────────────
   function setStatus(text, isLive = false) {
     document.getElementById("statusText").textContent = text;
     const pill = document.getElementById("statusPill");
     pill.className = "status-pill" + (isLive ? " live" : "");
   }
 
-  // ─── Score Circle ─────────────────────────────────────────────────────────
   function updateScoreCircle(score) {
     const circle = document.getElementById("scoreCircle");
     const val    = document.getElementById("scoreVal");
@@ -109,7 +96,6 @@ window.UI = (() => {
     document.getElementById("repVal").textContent = count;
   }
 
-  // ─── Live Cue Banner (on video) ───────────────────────────────────────────
   let cueBannerTimer = null;
 
   function showLiveCue(text, level = "warn") {
@@ -128,7 +114,6 @@ window.UI = (() => {
     el.classList.remove("visible");
   }
 
-  // ─── Cue Box (panel) ──────────────────────────────────────────────────────
   function showThinking() {
     document.getElementById("cueText").innerHTML = `
       <div class="dots"><span></span><span></span><span></span></div>
@@ -169,7 +154,6 @@ window.UI = (() => {
     num.className    = `cue-score-num ${level !== "good" ? level : ""}`;
   }
 
-  // ─── Metrics Grid ─────────────────────────────────────────────────────────
   const METRIC_LABELS = {
     head:  "HEAD",
     spine: "SPINE",
@@ -211,7 +195,6 @@ window.UI = (() => {
     document.querySelectorAll(".metric-item").forEach(el => { el.className = "metric-item"; });
   }
 
-  // ─── Coaching Log ─────────────────────────────────────────────────────────
   function addLogEntry(text, level = "warn") {
     const container = document.getElementById("logList");
     const time = new Date().toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
@@ -225,7 +208,6 @@ window.UI = (() => {
 
     container.insertBefore(entry, container.firstChild);
 
-    // Keep max 25 entries
     const entries = container.querySelectorAll(".log-entry");
     if (entries.length > 25) entries[entries.length - 1].remove();
   }
@@ -234,7 +216,6 @@ window.UI = (() => {
     document.getElementById("logList").innerHTML = "";
   }
 
-  // ─── Exercise Guide ───────────────────────────────────────────────────────
   function renderGuide(exercise) {
     const container = document.getElementById("guideContent");
     container.innerHTML = `
@@ -249,12 +230,10 @@ window.UI = (() => {
     `;
   }
 
-  // ─── No-Pose Overlay ──────────────────────────────────────────────────────
   function showNoPose(visible) {
     document.getElementById("noPoseOverlay").classList.toggle("visible", visible);
   }
 
-  // ─── Voice Toggle Button ──────────────────────────────────────────────────
   function setVoiceButtonState(isEnabled) {
     const btn   = document.getElementById("voiceToggle");
     const icon  = document.getElementById("voiceIcon");
@@ -264,7 +243,6 @@ window.UI = (() => {
     btn.classList.toggle("muted", !isEnabled);
   }
 
-  // ─── Timer Display ────────────────────────────────────────────────────────
   function updateTimerDisplay(seconds) {
     const m = String(Math.floor(seconds / 60)).padStart(2, "0");
     const s = String(seconds % 60).padStart(2, "0");
@@ -275,12 +253,10 @@ window.UI = (() => {
     document.getElementById("timerToggle").textContent = isRunning ? "⏸" : "▶";
   }
 
-  // ─── Helpers ──────────────────────────────────────────────────────────────
   function escapeHtml(str) {
     return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
-  // ─── Public ───────────────────────────────────────────────────────────────
   return {
     renderExerciseGrid,
     selectExerciseCard,

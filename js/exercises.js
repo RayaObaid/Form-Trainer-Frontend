@@ -1,9 +1,3 @@
-/**
- * exercises.js
- * All exercise definitions — metadata, cues, guide steps, and analysis function references.
- * To add a new exercise: add an entry here and create its analyzer in pose-analyzer.js
- */
-
 window.EXERCISES = [
   {
     id: "plank",
