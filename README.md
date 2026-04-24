@@ -35,7 +35,7 @@ If you would like any other exercise, just message me and I will add it.
 | Voice coaching | Web Speech API (native browser, no dependency) |
 | AI coaching language | OpenAI GPT-4o-mini |
 | Backend | Node.js + Express |
-| Frontend | Vanilla HTML, CSS, JavaScript — no framework, no build step |
+| Frontend | Vanilla HTML, CSS, JavaScript (no framework, no build step) |
 | Security | Helmet, CORS, express-rate-limit |
 
 
