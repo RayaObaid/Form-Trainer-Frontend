@@ -2,7 +2,7 @@ window.VoiceCoach = (() => {
   let enabled     = true;
   let speaking    = false;
   let lastSpoken  = 0;
-  let cooldownMs  = 3000;
+  let cooldownMs  = 2000;
   let voice       = null;
   const queue     = [];
 
@@ -33,26 +33,16 @@ window.VoiceCoach = (() => {
   loadVoices();
 
   function speak(text, opts = {}) {
-    if (!enabled) return;
-    if (!text || typeof text !== "string") return;
+  if (!enabled) return;
+  if (!text || typeof text !== "string") return;
 
-    const now = Date.now();
-    const gap = opts.priority ? 1500 : cooldownMs;
+  // Always cancel what's playing and speak immediately
+  window.speechSynthesis.cancel();
+  queue.length = 0;
+  speaking = false;
 
-    if (opts.priority && speaking) {
-      window.speechSynthesis.cancel();
-      speaking = false;
-    }
-
-    if (now - lastSpoken < gap && !opts.priority) {
-      if (!queue.some(q => q.text === text)) {
-        queue.push({ text, opts });
-      }
-      return;
-    }
-
-    _utterSpeak(text, opts);
-  }
+  _utterSpeak(text, opts);
+}
 
   function _utterSpeak(text, opts = {}) {
     if (!("speechSynthesis" in window)) return;
