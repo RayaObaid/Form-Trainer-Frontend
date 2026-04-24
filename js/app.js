@@ -14,7 +14,7 @@ window.App = (() => {
 
   let repCount         = 0;
   let lastFeedbackTime = 0;
-  const FEEDBACK_INTERVAL = 5000;
+  const FEEDBACK_INTERVAL = 3000;
 
   function init() {
     UI.renderExerciseGrid(window.EXERCISES);
@@ -182,7 +182,7 @@ window.App = (() => {
   const heightRatio = Math.abs(midAnk.y - midSh.y);
   const floorExercises = ["plank", "mountain-climber", "push-up", "burpee", "glute-bridge", "bicycle-crunch"];
 
-  if (floorExercises.includes(selectedExercise.id) && heightRatio > 0.35) {
+  if (floorExercises.includes(selectedExercise.id) && heightRatio > 0.18) {
     document.getElementById("liveCueText").textContent = "Get into position on the floor";
     document.getElementById("liveCueText").classList.add("visible");
     return;

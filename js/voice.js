@@ -2,7 +2,7 @@ window.VoiceCoach = (() => {
   let enabled     = true;
   let speaking    = false;
   let lastSpoken  = 0;
-  let cooldownMs  = 4000;
+  let cooldownMs  = 3000;
   let voice       = null;
   const queue     = [];
 
