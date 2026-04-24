@@ -11,7 +11,7 @@ window.App = (() => {
   let timerInterval    = null;
   let timerSeconds     = 0;
   let timerRunning     = false;
-
+  let lastSpokenCue = "";
   let repCount         = 0;
   let lastFeedbackTime = 0;
   const FEEDBACK_INTERVAL = 3000;
@@ -65,9 +65,9 @@ window.App = (() => {
     });
 
     pose.setOptions({
-      modelComplexity:         1,
-      smoothLandmarks:         true,
-      enableSegmentation:      false,
+      modelComplexity:          1,
+      smoothLandmarks:          true,
+      enableSegmentation:       false,
       minDetectionConfidence: 0.55,
       minTrackingConfidence:   0.55,
     });
@@ -103,9 +103,11 @@ window.App = (() => {
           });
 
           camera.start();
-          analysisActive = true;
-          UI.setStatus("LIVE", true);
-          startTimer();
+setTimeout(() => {
+  analysisActive = true;
+  UI.setStatus("LIVE", true);
+  startTimer();
+}, 1500);
         };
       })
       .catch(err => {
@@ -138,61 +140,74 @@ window.App = (() => {
   }
 
   function onPoseResults(results) {
-  if (!analysisActive) return;
+    if (!analysisActive) return;
 
-  const canvas = document.getElementById("poseCanvas");
-  const ctx    = canvas.getContext("2d");
+    const canvas = document.getElementById("poseCanvas");
+    const ctx    = canvas.getContext("2d");
 
-  if (results.image) {
-    canvas.width  = results.image.width  || canvas.width;
-    canvas.height = results.image.height || canvas.height;
+    if (results.image) {
+      canvas.width  = results.image.width  || canvas.width;
+      canvas.height = results.image.height || canvas.height;
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (!results.poseLandmarks) {
+      handleNoPose();
+      return;
+    }
+
+    if (!poseDetected) {
+      poseDetected = true;
+      clearTimeout(noPoseTimer);
+      noPoseTimer = null;
+      UI.showNoPose(false);
+    }
+
+    const lms = results.poseLandmarks;
+
+    drawConnectors(ctx, lms, POSE_CONNECTIONS, {
+      color: "rgba(232,255,71,0.45)",
+      lineWidth: 2.5,
+    });
+    drawLandmarks(ctx, lms, {
+      color:     "rgba(255,255,255,0.85)",
+      fillColor: "rgba(232,255,71,0.75)",
+      lineWidth: 1,
+      radius:    4,
+    });
+
+    // START FIXED SECTION
+    const leftAnkleVis  = lms[27].visibility || 0;
+    const rightAnkleVis = lms[28].visibility || 0;
+    const leftKneeVis   = lms[25].visibility || 0;
+    const rightKneeVis  = lms[26].visibility || 0;
+    const lowerBodyVis  = (leftAnkleVis + rightAnkleVis + leftKneeVis + rightKneeVis) / 4;
+
+    const needsFullBody = ["squat", "lunge", "deadlift", "shoulder-press", "lateral-raise", "jumping-jack", "burpee", "mountain-climber", "glute-bridge"];
+    if (needsFullBody.includes(selectedExercise.id) && lowerBodyVis < 0.4) {
+      UI.updateCueBox("Step back — full body needs to be visible", 0, "warn");
+      return;
+    }
+
+    const result = PoseAnalyzer.analyze(selectedExercise.analyzerKey, lms);
+
+    UI.updateScoreCircle(result.score);
+    UI.updateMetrics(result.metrics);
+
+    if (result.repSignal) {
+      repCount++;
+      UI.updateRepCircle(repCount);
+      VoiceCoach.announceRep(repCount);
+    }
+
+    const now = Date.now();
+    if (now - lastFeedbackTime >= FEEDBACK_INTERVAL) {
+      lastFeedbackTime = now;
+      fetchAndDeliverFeedback(result);
+    }
+    // END FIXED SECTION
   }
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  if (!results.poseLandmarks) {
-    handleNoPose();
-    return;
-  }
-
-  if (!poseDetected) {
-    poseDetected = true;
-    clearTimeout(noPoseTimer);
-    noPoseTimer = null;
-    UI.showNoPose(false);
-  }
-
-  const lms = results.poseLandmarks;
-
-  // Draw skeleton FIRST — always, regardless of position check
-  drawConnectors(ctx, lms, POSE_CONNECTIONS, {
-    color: "rgba(232,255,71,0.45)",
-    lineWidth: 2.5,
-  });
-  drawLandmarks(ctx, lms, {
-    color:     "rgba(255,255,255,0.85)",
-    fillColor: "rgba(232,255,71,0.75)",
-    lineWidth: 1,
-    radius:    4,
-  });
-
-  const result = PoseAnalyzer.analyze(selectedExercise.analyzerKey, lms);
-
-  UI.updateScoreCircle(result.score);
-  UI.updateMetrics(result.metrics);
-
-  if (result.repSignal) {
-    repCount++;
-    UI.updateRepCircle(repCount);
-    VoiceCoach.announceRep(repCount);
-  }
-
-  const now = Date.now();
-  if (now - lastFeedbackTime >= FEEDBACK_INTERVAL) {
-    lastFeedbackTime = now;
-    fetchAndDeliverFeedback(result);
-  }
-}
 
   function handleNoPose() {
     if (!noPoseTimer) {
@@ -206,16 +221,15 @@ window.App = (() => {
     }
   }
 
+  // START FIXED SECTION
   async function fetchAndDeliverFeedback(analysisResult) {
     if (!analysisActive) return;
-
     if (timerSeconds < 3) return;
-    UI.showThinking();
 
     const payload = {
       exercise:       selectedExercise.id,
-      score:           analysisResult.score,
-      metrics:         analysisResult.metrics,
+      score:          analysisResult.score,
+      metrics:        analysisResult.metrics,
       issues:         analysisResult.issues,
       reps:           repCount,
       sessionSeconds: timerSeconds,
@@ -226,17 +240,22 @@ window.App = (() => {
       if (!analysisActive) return;
 
       const { cue, level } = response;
+
+      // Never repeat the exact same cue twice in a row
+      if (cue === lastSpokenCue) return;
+      lastSpokenCue = cue;
+
       UI.updateCueBox(cue, analysisResult.score, level);
       UI.showLiveCue(cue, level);
       UI.addLogEntry(cue, level);
 
-      const isUrgent = level === "bad";
-      VoiceCoach.sayCoachingCue(cue, isUrgent);
+      VoiceCoach.sayCoachingCue(cue, level === "bad");
 
     } catch (err) {
       console.error("[App] Feedback error:", err);
     }
   }
+  // END FIXED SECTION
 
   function startTimer() {
     if (timerRunning) return;

@@ -72,18 +72,23 @@ window.TrainerAPI = (() => {
     "Excellent form. Don't let it slip.",
   ];
 
-  function _localFallback({ score, issues }) {
-  let cue;
+  let lastGoodCueIndex = -1;
+
+function _localFallback({ score, issues }) {
   const level = score >= 75 ? "good" : score >= 50 ? "warn" : "bad";
+  let cue;
 
   if (issues.length > 0) {
-    // Always prioritize actual issues over praise
-    const firstKey = issues[0];
-    cue = CUE_MAP[firstKey] || "Fix your alignment and keep going.";
-  } else if (score >= 80) {
-    cue = GOOD_CUES[Math.floor(Math.random() * GOOD_CUES.length)];
+    cue = CUE_MAP[issues[0]] || "Fix your alignment and keep going.";
+  } else if (score >= 75) {
+    // Rotate through good cues, never repeat the same one twice
+    let idx;
+    do { idx = Math.floor(Math.random() * GOOD_CUES.length); }
+    while (idx === lastGoodCueIndex && GOOD_CUES.length > 1);
+    lastGoodCueIndex = idx;
+    cue = GOOD_CUES[idx];
   } else {
-    cue = "Keep going — focus on staying tight.";
+    cue = "Keep going — stay focused and tight.";
   }
 
   return { cue, score, level, fallback: true };
