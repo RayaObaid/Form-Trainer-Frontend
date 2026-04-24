@@ -128,7 +128,7 @@ window.EXERCISES = [
   {
     id: "glute-bridge",
     name: "Glute Bridge",
-    icon: "🍑",
+    icon: "👟",
     difficulty: "easy",
     muscle: "Glutes & Hamstrings",
     guide: [
