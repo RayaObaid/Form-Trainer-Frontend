@@ -177,7 +177,6 @@ setTimeout(() => {
       radius:    4,
     });
 
-    // START FIXED SECTION
     const leftAnkleVis  = lms[27].visibility || 0;
     const rightAnkleVis = lms[28].visibility || 0;
     const leftKneeVis   = lms[25].visibility || 0;
@@ -206,7 +205,6 @@ setTimeout(() => {
       lastFeedbackTime = now;
       fetchAndDeliverFeedback(result);
     }
-    // END FIXED SECTION
   }
 
   function handleNoPose() {
@@ -221,7 +219,6 @@ setTimeout(() => {
     }
   }
 
-  // START FIXED SECTION
   async function fetchAndDeliverFeedback(analysisResult) {
     if (!analysisActive) return;
     if (timerSeconds < 3) return;
@@ -241,7 +238,6 @@ setTimeout(() => {
 
       const { cue, level } = response;
 
-      // Never repeat the exact same cue twice in a row
       if (cue === lastSpokenCue) return;
       lastSpokenCue = cue;
 
@@ -255,7 +251,6 @@ setTimeout(() => {
       console.error("[App] Feedback error:", err);
     }
   }
-  // END FIXED SECTION
 
   function startTimer() {
     if (timerRunning) return;
